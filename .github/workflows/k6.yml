@@ -24,5 +24,14 @@ jobs:
       - name: Verify k6 Installation
         run: k6 version
 
-      - name: Run virtual users Test
-        run: k6 run scripts/basics/virtual-users.js
+      - name: Run Virtual Users Test
+        run: |
+         mkdir results
+         k6 run scripts/basics/virtual-users.js \
+         --summary-export=results/summary.json
+
+      - name: Upload Summary Report
+        uses: actions/upload-artifact@v4
+        with:
+            name: k6-summary
+            path: results/summary.json
