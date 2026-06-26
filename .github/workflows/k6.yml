@@ -25,4 +25,4 @@ jobs:
         run: k6 version
 
       - name: Run Smoke Test
-        run: k6 run 01-K6-Basics/smoke-test.js
+        run: k6 run K6-Demo/tests/smoke-test.js
