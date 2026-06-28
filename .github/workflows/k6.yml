@@ -10,30 +10,47 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      # Checkout repository
       - name: Checkout Repository
         uses: actions/checkout@v4
 
+      # Install k6
       - name: Install k6
         run: |
           sudo gpg -k
-          sudo gpg --no-default-keyring --keyring /usr/share/keyrings/k6-archive-keyring.gpg --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys C5AD17C747E3415A3642D57D77C6C491D6AC1D69
-          echo "deb [signed-by=/usr/share/keyrings/k6-archive-keyring.gpg] https://dl.k6.io/deb stable main" | sudo tee /etc/apt/sources.list.d/k6.list
-          sudo apt-get update
-          sudo apt-get install k6
+          sudo gpg --no-default-keyring \
+            --keyring /usr/share/keyrings/k6-archive-keyring.gpg \
+            --keyserver hkp://keyserver.ubuntu.com:80 \
+            --recv-keys C5AD17C747E3415A3642D57D77C6C491D6AC1D69
 
+          echo "deb [signed-by=/usr/share/keyrings/k6-archive-keyring.gpg] https://dl.k6.io/deb stable main" | sudo tee /etc/apt/sources.list.d/k6.list
+
+          sudo apt-get update
+          sudo apt-get install -y k6
+
+      # Verify installation
       - name: Verify k6 Installation
         run: k6 version
 
+      # Execute k6 test and generate summary
       - name: Run Virtual Users Test
         run: |
-              mkdir -p results
-              TIMESTAMP=$(date +"%Y-%m-%d_%H-%M-%S")
+          mkdir -p results
 
-              k6 run scripts/basics/virtual-users.js \
-              --summary-export=results/summary-build-${{ github.run_number }}-$TIMESTAMP.json
+          TIMESTAMP=$(date +"%Y-%m-%d_%H-%M-%S")
 
-             - name: Upload Summary Report
-              uses: actions/upload-artifact@v4
-              with:
-               name: k6-summary
-               path: results/summary.json
+          k6 run scripts/basics/virtual-users.js \
+            --summary-export="results/summary-build-${{ github.run_number }}-${TIMESTAMP}.json"
+
+      # Display generated files (for learning/debugging)
+      - name: Show Generated Files
+        run: |
+          echo "Generated files:"
+          ls -lh results
+
+      # Upload artifact
+      - name: Upload Summary Report
+        uses: actions/upload-artifact@v4
+        with:
+          name: k6-summary-build-${{ github.run_number }}
+          path: results/*.json
